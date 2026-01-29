@@ -43,9 +43,16 @@ def validate_date(date_str):                     # Validate date format
         return False
 
 def row_to_dict(row):                            # Convert row to dictionary
-    d = dict(row)
-    if d.get('updated_at') is None:              # Hide 'updated_at' if it hasn't been set yet
-        d.pop('updated_at', None)
+    d = {
+        "id": row["id"],
+        "title": row["title"],
+        "description": row["description"],
+        "due_date": row["due_date"],
+        "completed": bool(row["completed"]),
+        "created_at": row["created_at"]
+    }
+    if row["updated_at"] is not None:
+        d["updated_at"] = row["updated_at"]
     return d
 
 # API Endpoints-------------------------------------------------------------------
