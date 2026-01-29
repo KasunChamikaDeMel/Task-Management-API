@@ -1,6 +1,10 @@
-# Assessment-ToDo (Flask)
+# Task Management API
 
 A simple REST API for managing tasks (to-do list) built with **Flask** and **SQLite**.
+
+### Repository Names
+- **GitHub**: `task-management-api`
+- **GitLab**: `task-management-api-backend`
 
 ## Setup
 

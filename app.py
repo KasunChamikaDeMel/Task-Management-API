@@ -61,7 +61,7 @@ def row_to_dict(row):
 def root():
     """Root endpoint providing metadata about the API."""
     return jsonify({
-        "message": "Assessment-ToDo API",
+        "message": "Task Management API",
         "version": "1.0.0",
         "endpoints": {
             "create_task": "POST /api/tasks",
