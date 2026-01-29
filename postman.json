@@ -1,0 +1,150 @@
+{
+    "info": {
+        "name": "Assessment-ToDo",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "0. Root Info",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        ""
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "1. Create Task",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"title\": \"Complete coding challenge\",\n    \"description\": \"Build the task management API\",\n    \"due_date\": \"2026-01-25\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/tasks",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "tasks"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "2. List All Tasks",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/tasks",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "tasks"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "3. Get Single Task",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/tasks/1",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "tasks",
+                        "1"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "4. Update Task",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"completed\": true\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:5000/api/tasks/1",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "tasks",
+                        "1"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "5. Delete Task",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "http://localhost:5000/api/tasks/1",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "5000",
+                    "path": [
+                        "api",
+                        "tasks",
+                        "1"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}
