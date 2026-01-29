@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 # Initialize Flask app
 app = Flask(__name__)
+app.json.sort_keys = False
 DB_PATH = "spec.db"
 
 # Database Function
