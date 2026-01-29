@@ -2,28 +2,24 @@ from flask import Flask, request, jsonify, make_response
 import sqlite3
 from datetime import datetime, timezone
 
-# Initialize the Flask application
+# Initialize Flask app
 app = Flask(__name__)
 DB_PATH = "spec.db"
 
-# --- Database Helper Functions ---
-
+# Database Function
 def get_db_connection():
-    """Establishes and returns a connection to the SQLite database."""
     try:
         conn = sqlite3.connect(DB_PATH)
-        # Use sqlite3.Row to allow accessing columns by name (e.g., row['title'])
-        conn.row_factory = sqlite3.Row
+        conn.row_factory = sqlite3.Row      # sqlite3.Row to allow accessing columns by name
         return conn
     except sqlite3.Error as e:
         print(f"Database connection error: {e}")
         return None
 
-def init_db():
-    """Initializes the database schema if it doesn't already exist."""
-    conn = get_db_connection()
-    if conn:
-        conn.execute("""
+def init_db():                  
+    conn = get_db_connection()             
+    if conn:                                   # Initial create table
+        conn.execute("""                          
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -37,32 +33,27 @@ def init_db():
         conn.commit()
         conn.close()
 
-# --- Utility Helper Functions ---
+#--------------------------------------------------------------------------------
 
-def validate_date(date_str):
-    """Validates if a string is a proper ISO 8601 date format."""
+def validate_date(date_str):                     # Validate date format
     try:
         datetime.fromisoformat(date_str.replace('Z', '+00:00'))
         return True
     except ValueError:
         return False
 
-def row_to_dict(row):
-    """Converts a database row into a dictionary for JSON responses, hiding null 'updated_at'."""
+def row_to_dict(row):                            # Convert row to dictionary
     d = dict(row)
-    # Hide 'updated_at' if it hasn't been set yet (matches requirement example)
-    if d.get('updated_at') is None:
+    if d.get('updated_at') is None:              # Hide 'updated_at' if it hasn't been set yet
         d.pop('updated_at', None)
     return d
 
-# --- API Endpoints ---
+# API Endpoints-------------------------------------------------------------------
 
-@app.route('/', methods=['GET'])
-def root():
-    """Root endpoint providing metadata about the API."""
+@app.route('/', methods=['GET'])  
+def root():                      #Root
     return jsonify({
         "message": "Task Management API",
-        "version": "1.0.0",
         "endpoints": {
             "create_task": "POST /api/tasks",
             "list_tasks": "GET /api/tasks",
@@ -72,20 +63,21 @@ def root():
         }
     }), 200
 
+#--------------------------------------------------------------------------------
+
 @app.route('/api/tasks', methods=['POST'])
-def create_task():
-    """Endpoint to create a new task."""
+def create_task():                              #Create Task
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "Invalid input, JSON required"}), 400
         
-        # Validation: Title is required and cannot be empty
+        # Validation- Title cannot be empty
         title = data.get('title')
         if not title or not title.strip():
-            return jsonify({"error": "Title is required and cannot be empty"}), 400
+            return jsonify({"error": "Title cannot be empty"}), 400
         
-        # Optional validation for due_date
+        # validation for due_date
         due_date = data.get('due_date')
         if due_date and not validate_date(due_date):
             return jsonify({"error": "Invalid date format. Use ISO format (YYYY-MM-DD)"}), 400
@@ -94,20 +86,15 @@ def create_task():
         if not conn:
             return jsonify({"error": "Database connection failed"}), 500
 
-        # Create UTC timestamp in ISO format
+        # UTC time in ISO format
         created_at = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
-        cursor = conn.cursor()
-        
-        # Execute INSERT query
-        cursor.execute("""
-            INSERT INTO tasks (title, description, due_date, completed, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        """, (title.strip(), data.get('description'), due_date, False, created_at))
+        cursor = conn.execute("INSERT INTO tasks (title, description, due_date, completed, created_at) VALUES (?, ?, ?, ?, ?)",
+                              (title.strip(), data.get('description'), due_date, False, created_at))
         
         task_id = cursor.lastrowid
         conn.commit()
         
-        # Fetch the newly created task to return it in the response
+        # Fetch newly created task to return it in response
         cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
         new_task = cursor.fetchone()
         conn.close()
@@ -117,17 +104,17 @@ def create_task():
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
+#--------------------------------------------------------------------------------
+
 @app.route('/api/tasks', methods=['GET'])
-def get_tasks():
-    """Endpoint to retrieve all tasks from the database."""
+def get_tasks():                    #List Tasks
     try:
         conn = get_db_connection()
         if not conn:
             return jsonify({"error": "Database connection failed"}), 500
         
         cursor = conn.cursor()
-        # Fetch all tasks sorted by creation date (newest first)
-        cursor.execute("SELECT * FROM tasks ORDER BY created_at DESC")
+        cursor.execute("SELECT * FROM tasks ORDER BY created_at DESC")          #Sorted by creation date
         rows = cursor.fetchall()
         tasks = [row_to_dict(row) for row in rows]
         conn.close()
@@ -136,13 +123,14 @@ def get_tasks():
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
+#---------------------------------------------------------------------------------
+
 @app.route('/api/tasks/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    """Endpoint to retrieve a specific task by its unique ID."""
+def get_task(task_id):               #Get Task
     try:
         conn = get_db_connection()
         if not conn:
-            return jsonify({"error": "Database connection failed"}), 500
+            return jsonify({"error": "Database failed"}), 500
              
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
@@ -158,9 +146,10 @@ def get_task(task_id):
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
+#---------------------------------------------------------------------------------
+
 @app.route('/api/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    """Endpoint to update one or more fields of an existing task."""
+def update_task(task_id):            #Update Task
     try:
         data = request.get_json()
         if not data:
@@ -168,29 +157,29 @@ def update_task(task_id):
 
         conn = get_db_connection()
         if not conn:
-            return jsonify({"error": "Database connection failed"}), 500
+            return jsonify({"error": "Database failed"}), 500
         
         cursor = conn.cursor()
         
-        # Check if the task exists before attempting update
+        # Check existance before update
         cursor.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
         if not cursor.fetchone():
             conn.close()
-            return jsonify({"error": "Task not found"}), 404
+            return jsonify({"error": "Task missing"}), 404
 
-        # Validation: If title is provided, it cannot be empty
+        # Validation: title cannot be empty
         title = data.get('title')
         if 'title' in data and (not title or not title.strip()):
             conn.close()
-            return jsonify({"error": "Title cannot be empty"}), 400
+            return jsonify({"error": "Title is empty"}), 400
         
-        # Validation: If due_date is provided, check format
+        # Validation: due_date check format
         due_date = data.get('due_date')
         if due_date and not validate_date(due_date):
             conn.close()
-            return jsonify({"error": "Invalid date format. Use ISO format (YYYY-MM-DD)"}), 400
+            return jsonify({"error": "Invalid date format"}), 400
 
-        # Dynamically build the UPDATE query based on provided fields
+        # UPDATE query
         update_fields = []
         update_values = []
 
@@ -206,9 +195,8 @@ def update_task(task_id):
         if 'completed' in data:
             update_fields.append("completed = ?")
             update_values.append(bool(data['completed']))
-        
+    
         if update_fields:
-            # Add updated_at timestamp on every modification
             updated_at = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             update_fields.append("updated_at = ?")
             update_values.append(updated_at)
@@ -218,7 +206,7 @@ def update_task(task_id):
             cursor.execute(query, update_values)
             conn.commit()
 
-        # Fetch and return the updated task object
+        # Fetch and return updated task
         cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
         updated_task = cursor.fetchone()
         conn.close()
@@ -228,20 +216,21 @@ def update_task(task_id):
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
+#--------------------------------------------------------------------------------
+
 @app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
-def delete_task(task_id):
-    """Endpoint to delete an existing task by its ID."""
+def delete_task(task_id):            #Delete Task
     try:
         conn = get_db_connection()
         if not conn:
-            return jsonify({"error": "Database connection failed"}), 500
+            return jsonify({"error": "Database failed"}), 500
              
         cursor = conn.cursor()
-        # Verify the task exists before deleting
+        # Verify existance
         cursor.execute("SELECT 1 FROM tasks WHERE id = ?", (task_id,))
         if not cursor.fetchone():
             conn.close()
-            return jsonify({"error": "Task not found"}), 404
+            return jsonify({"error": "Task missing"}), 404
 
         # Execute DELETE query
         cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
@@ -253,13 +242,12 @@ def delete_task(task_id):
     except Exception as e:
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
-# Error Handler for generic 404 Not Found errors
-@app.errorhandler(404)
+#---------------------------------------------------------------------------
+
+@app.errorhandler(404)          # 404 Error Handler
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 if __name__ == '__main__':
-    # Ensure database is initialized before starting server
-    init_db()
-    # Run the Flask app on port 5000 with debug mode enabled
+    init_db()                         # Initialize database before starting server
     app.run(debug=True, port=5000)
